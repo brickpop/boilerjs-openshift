@@ -27,8 +27,8 @@ var TemplateApp = function() {
         self.useHttps = false;
 
         // PORTS
-        self.httpPort = process.env.OPENSHIFT_NODEJS_PORT || 8080;
-        self.httpsPort = process.env.OPENSHIFT_NODEJS_SSL_PORT || 8443;
+        self.httpPort = parseInt(process.env.OPENSHIFT_NODEJS_PORT || 8080);
+        self.httpsPort = parseInt(process.env.OPENSHIFT_NODEJS_SSL_PORT || 8443);
 
         // Mongo DB
         self.dbHost = "ds063449.mongolab.com:63449";
@@ -138,11 +138,11 @@ var TemplateApp = function() {
         var httpServer, httpServer;
         if(self.useHttp) {
             httpServer = http.createServer(self.app);
-            httpServer.listen(self.httpPort);
+            httpServer.listen(self.httpPort, self.ipaddress);
         }
         if(self.useHttps) {
             httpsServer = https.createServer(credentials, self.app);
-            httpsServer.listen(self.httpsPort);
+            httpsServer.listen(self.httpsPort, self.ipaddress);
         }
 
         console.log("Server listening on ", self.ipaddress, self.useHttp ? self.httpPort : "", self.useHttps ? self.httpsPort : "");
