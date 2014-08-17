@@ -15,20 +15,13 @@ var TemplateApp = function() {
     self.setupVariables = function() {
 
         self.ipaddress = process.env.OPENSHIFT_NODEJS_IP;
+        self.port = parseInt(process.env.OPENSHIFT_NODEJS_PORT || 8080);
         self.path = __dirname;
 
         if (typeof self.ipaddress === "undefined") {
             console.warn('No OPENSHIFT_NODEJS_IP var, using 127.0.0.1');
             self.ipaddress = "127.0.0.1";
         };
-
-        // FEATURES
-        self.useHttp = true;
-        self.useHttps = false;
-
-        // PORTS
-        self.httpPort = parseInt(process.env.OPENSHIFT_NODEJS_PORT || 8080);
-        self.httpsPort = parseInt(process.env.OPENSHIFT_NODEJS_SSL_PORT || 8443);
 
         // Mongo DB
         self.dbHost = "ds063449.mongolab.com:63449";
@@ -39,10 +32,6 @@ var TemplateApp = function() {
         // HTTP Authentication
         self.httpUser = "";
         self.httpPassword = "";
-
-        // SSL Certificates
-        self.keyFile = '/etc/pki/tls/private/localhost.key';
-        self.certFile = '/etc/pki/tls/certs/localhost.crt';
     };
 
     // CACHE
@@ -61,8 +50,7 @@ var TemplateApp = function() {
     // LIFECYCLE
     self.terminator = function(sig){
         if (typeof sig === "string") {
-           console.log('%s: Received %s - terminating sample app ...',
-                       Date(Date.now()), sig);
+           console.log('%s: Received %s - terminating sample app ...', Date(Date.now()), sig);
            process.exit(1);
         }
         console.log('%s: Node server stopped.', Date(Date.now()) );
@@ -116,13 +104,6 @@ var TemplateApp = function() {
             mongoose.connect('mongodb://' + self.dbUser + ':' + self.dbPassword + '@' + self.dbHost + '/' + self.dbName);
         else
             mongoose.connect('mongodb://' + self.dbHost + '/' + self.dbName);
-
-        // SSL
-        if(self.useHttps) {
-            var privateKey  = fs.readFileSync(self.keyFile, 'utf8');
-            var certificate = fs.readFileSync(self.certFile, 'utf8');
-            var credentials = {key: privateKey, cert: certificate};
-        }
     };
 
     self.initialize = function() {
@@ -135,17 +116,11 @@ var TemplateApp = function() {
     self.start = function() {
 
         // START SERVER
-        var httpServer, httpServer;
-        if(self.useHttp) {
-            httpServer = http.createServer(self.app);
-            httpServer.listen(self.httpPort, self.ipaddress);
-        }
-        if(self.useHttps) {
-            httpsServer = https.createServer(credentials, self.app);
-            httpsServer.listen(self.httpsPort, self.ipaddress);
-        }
+        var httpServer;
+        httpServer = http.createServer(self.app);
+        httpServer.listen(self.httpPort, self.ipaddress);
 
-        console.log("Server listening on ", self.ipaddress, self.useHttp ? self.httpPort : "", self.useHttps ? self.httpsPort : "");
+        console.log("%s:   Server listening on %s:%d", Date(Date.now()), self.ipaddress, self.port);
     };
 
 };
