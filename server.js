@@ -15,6 +15,7 @@ var TemplateApp = function() {
     self.setupVariables = function() {
 
         self.ipaddress = process.env.OPENSHIFT_NODEJS_IP;
+        self.path = __dirname;
 
         if (typeof self.ipaddress === "undefined") {
             console.warn('No OPENSHIFT_NODEJS_IP var, using 127.0.0.1');
@@ -50,7 +51,7 @@ var TemplateApp = function() {
             self.localCache = { 'index.html': '' };
         }
 
-        self.localCache['index.html'] = fs.readFileSync('./public/index.html');
+        self.localCache['index.html'] = fs.readFileSync(self.path + '/public/index.html');
     };
 
     self.getCached = function(key) {
