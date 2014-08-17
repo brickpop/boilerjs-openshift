@@ -126,8 +126,8 @@ gulp.task('make', ['clean'], function() {
 // Default task
 gulp.task('default', function() {
   console.log("\nAvailable actions:\n");
-  console.log("   $ gulp debug");
   console.log("   $ gulp make");
+  console.log("   $ gulp debug");
   console.log("   $ gulp test\n");
 });
 
@@ -139,18 +139,6 @@ gulp.task('debug', ['make'], function () {
       console.log('App restarted')
     })
 });
-
-gulp.task('start', ['make'], shell.task([
-  'forever start app.js'
-]));
-
-gulp.task('restart', ['make'], shell.task([
-  'forever restart app.js'
-]));
-
-gulp.task('stop', shell.task([
-  'forever stop app.js'
-]));
 
 gulp.task('test', ['make'], function () {
     gulp.src('test/index.js')

@@ -1,4 +1,4 @@
 boilerjs
 ========
 
-Boilerplate of a web site built on AngularJS, Node and MongoDB
+Boilerplate of a web site built on AngularJS, NodeJS and MongoDB, running on Openshift

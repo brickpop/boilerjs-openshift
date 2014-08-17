@@ -24,10 +24,10 @@ var TemplateApp = function() {
         };
 
         // Mongo DB
-        self.dbHost = "ds063449.mongolab.com:63449";
-        self.dbName = "testing";
-        self.dbUser = "test";
-        self.dbPassword = "test";
+        self.dbHost = process.env.OPENSHIFT_MONGODB_HOST || "ds063449.mongolab.com:63449";
+        self.dbName = process.env.OPENSHIFT_MONGODB_DBNAME || "";
+        self.dbUser = process.env.OPENSHIFT_MONGODB_USER || "";
+        self.dbPassword = process.env.OPENSHIFT_MONGODB_PASSWORD || "";
 
         // HTTP Authentication
         self.httpUser = "";

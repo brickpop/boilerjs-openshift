@@ -37,4 +37,5 @@ Icon
 .Trashes
 
 node_modules
+public
 .sass-cache
