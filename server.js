@@ -1,64 +1,63 @@
 #!/bin/env node
-//  OpenShift sample Node application
+
+var fs = require('fs');
+var http = require('http');
+var https = require('https');
 var express = require('express');
-var fs      = require('fs');
+var mongoose = require('mongoose');
+var api = require('./controllers/api.js');
 
 
-/**
- *  Define the sample application.
- */
-var SampleApp = function() {
+var TemplateApp = function() {
 
-    //  Scope.
     var self = this;
 
-
-    /*  ================================================================  */
-    /*  Helper functions.                                                 */
-    /*  ================================================================  */
-
-    /**
-     *  Set up server IP address and port # using env variables/defaults.
-     */
     self.setupVariables = function() {
-        //  Set the environment variables we need.
+
         self.ipaddress = process.env.OPENSHIFT_NODEJS_IP;
-        self.port      = process.env.OPENSHIFT_NODEJS_PORT || 8080;
 
         if (typeof self.ipaddress === "undefined") {
-            //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
-            //  allows us to run/test the app locally.
             console.warn('No OPENSHIFT_NODEJS_IP var, using 127.0.0.1');
             self.ipaddress = "127.0.0.1";
         };
+
+        // FEATURES
+        self.useHttp = true;
+        self.useHttps = false;
+
+        // PORTS
+        self.httpPort = process.env.OPENSHIFT_NODEJS_PORT || 8080;
+        self.httpsPort = process.env.OPENSHIFT_NODEJS_SSL_PORT || 8443;
+
+        // Mongo DB
+        self.dbHost = "ds063449.mongolab.com:63449";
+        self.dbName = "testing";
+        self.dbUser = "test";
+        self.dbPassword = "test";
+
+        // HTTP Authentication
+        self.httpUser = "";
+        self.httpPassword = "";
+
+        // SSL Certificates
+        self.keyFile = '/etc/pki/tls/private/localhost.key';
+        self.certFile = '/etc/pki/tls/certs/localhost.crt';
     };
 
-
-    /**
-     *  Populate the cache.
-     */
+    // CACHE
     self.populateCache = function() {
-        if (typeof self.zcache === "undefined") {
-            self.zcache = { 'index.html': '' };
+        if (typeof self.localCache === "undefined") {
+            self.localCache = { 'index.html': '' };
         }
 
-        //  Local cache for static content.
-        self.zcache['index.html'] = fs.readFileSync('./index.html');
+        self.localCache['index.html'] = fs.readFileSync('./public/index.html');
     };
 
+    self.getCached = function(key) {
+        return self.localCache[key];
+    };
 
-    /**
-     *  Retrieve entry (content) from cache.
-     *  @param {string} key  Key identifying content to retrieve from cache.
-     */
-    self.cache_get = function(key) { return self.zcache[key]; };
-
-
-    /**
-     *  terminator === the termination handler
-     *  Terminate server on receipt of the specified signal.
-     *  @param {string} sig  Signal to terminate on.
-     */
+    // LIFECYCLE
     self.terminator = function(sig){
         if (typeof sig === "string") {
            console.log('%s: Received %s - terminating sample app ...',
@@ -68,12 +67,8 @@ var SampleApp = function() {
         console.log('%s: Node server stopped.', Date(Date.now()) );
     };
 
-
-    /**
-     *  Setup termination handlers (for exit and a list of signals).
-     */
     self.setupTerminationHandlers = function(){
-        //  Process on exit and signals.
+
         process.on('exit', function() { self.terminator(); });
 
         // Removed 'SIGPIPE' from the list - bugz 852598.
@@ -84,76 +79,77 @@ var SampleApp = function() {
         });
     };
 
-
-    /*  ================================================================  */
-    /*  App server functions (main app logic here).                       */
-    /*  ================================================================  */
-
-    /**
-     *  Create the routing table entries + handlers for the application.
-     */
+    // SERVER
     self.createRoutes = function() {
-        self.routes = { };
-
-        self.routes['/asciimo'] = function(req, res) {
-            var link = "http://i.imgur.com/kmbjB.png";
-            res.send("<html><body><img src='" + link + "'></body></html>");
-        };
-
-        self.routes['/'] = function(req, res) {
-            res.setHeader('Content-Type', 'text/html');
-            res.send(self.cache_get('index.html') );
+        self.routes = {
+            '/api/users': api.users,
+            '/api/users/:username': api.user,
+            '/api/events': api.events
         };
     };
 
-
-    /**
-     *  Initialize the server (express) and create the routes and register
-     *  the handlers.
-     */
     self.initializeServer = function() {
-        self.createRoutes();
-        self.app = express.createServer();
 
-        //  Add handlers for the app (from the routes).
+        self.app = express();
+        self.createRoutes();
+
+        // SERVER SETTINGS
+        self.app.configure(function(){
+          self.app.use(express.bodyParser());
+          self.app.use(express.methodOverride());
+          self.app.use(self.app.router);
+
+          if(self.httpUser && self.httpPassword) {
+              self.app.use(express.basicAuth(self.httpUser, self.password));
+          }
+          self.app.use(express.static('./public'));
+        });
+
+        //  Add handlers for the app
         for (var r in self.routes) {
             self.app.get(r, self.routes[r]);
         }
+
+        // DATABASE
+        if(self.dbUser && self.dbPassword)
+            mongoose.connect('mongodb://' + self.dbUser + ':' + self.dbPassword + '@' + self.dbHost + '/' + self.dbName);
+        else
+            mongoose.connect('mongodb://' + self.dbHost + '/' + self.dbName);
+
+        // SSL
+        if(self.useHttps) {
+            var privateKey  = fs.readFileSync(self.keyFile, 'utf8');
+            var certificate = fs.readFileSync(self.certFile, 'utf8');
+            var credentials = {key: privateKey, cert: certificate};
+        }
     };
 
-
-    /**
-     *  Initializes the sample application.
-     */
     self.initialize = function() {
         self.setupVariables();
         self.populateCache();
         self.setupTerminationHandlers();
-
-        // Create the express server and routes.
         self.initializeServer();
     };
 
-
-    /**
-     *  Start the server (starts up the sample application).
-     */
     self.start = function() {
-        //  Start the app on the specific interface (and port).
-        self.app.listen(self.port, self.ipaddress, function() {
-            console.log('%s: Node server started on %s:%d ...',
-                        Date(Date.now() ), self.ipaddress, self.port);
-        });
+
+        // START SERVER
+        var httpServer, httpServer;
+        if(self.useHttp) {
+            httpServer = http.createServer(self.app);
+            httpServer.listen(self.httpPort);
+        }
+        if(self.useHttps) {
+            httpsServer = https.createServer(credentials, self.app);
+            httpsServer.listen(self.httpsPort);
+        }
+
+        console.log("Server listening on ", self.ipaddress, self.useHttp ? self.httpPort : "", self.useHttps ? self.httpsPort : "");
     };
 
-};   /*  Sample Application.  */
+};
 
-
-
-/**
- *  main():  Main code.
- */
-var zapp = new SampleApp();
+// MAIN
+var zapp = new TemplateApp();
 zapp.initialize();
 zapp.start();
-

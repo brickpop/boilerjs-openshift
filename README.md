@@ -1,3 +1,4 @@
-The OpenShift `nodejs` cartridge documentation can be found at:
+boilerjs
+========
 
-http://openshift.github.io/documentation/oo_cartridge_guide.html#nodejs
+Boilerplate of a web site built on AngularJS, Node and MongoDB
