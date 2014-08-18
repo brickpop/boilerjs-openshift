@@ -6,13 +6,19 @@ exports.users = function(req, res) {
   .where('state').equals('active')
   .sort('-score')
   .exec(function(err, users){
-    res.send(users);
+    if(error)
+      res.send({error: err});
+    else
+      res.send(users);
   });
 };
 
 exports.user = function(req, res) {
   UserModel.findOne({username: req.params.username}, function(err, users){
-    res.send(users);
+    if(error)
+      res.send({error: err});
+    else
+      res.send(users);
   });
 };
 
@@ -24,6 +30,9 @@ exports.events = function(req, res) {
   .where('date').gt(threshold)
   .sort('-date')
   .exec(function(err, events){
-    res.send(events);
+    if(error)
+      res.send({error: err});
+    else
+      res.send(events);
   });
 };
