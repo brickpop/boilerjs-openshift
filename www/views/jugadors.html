@@ -26,9 +26,9 @@
 
               <tr ng-repeat="jug in users">
                 <td><a ng-href="#/jugadores/{{jug.nick}}">{{($index+1)}}</a></td>
-                <td><a ng-href="#/jugadores/{{jug.nick}}">{{jug.nom + ' ' + jug.cognoms}}</a></td>
-                <td><a ng-href="#/jugadores/{{jug.nick}}">{{jug.nick}}</a></td>
-                <td><a ng-href="#/jugadores/{{jug.nick}}">{{jug.millorFinal.toFixed(0)}}</a></td>
+                <td><a ng-href="#/jugadores/{{jug.nick}}">{{jug.name + ' ' + jug.lastname}}</a></td>
+                <td><a ng-href="#/jugadores/{{jug.nick}}">{{jug.email}}</a></td>
+                <td><a ng-href="#/jugadores/{{jug.nick}}">{{jug.score.toFixed(0)}}</a></td>
               </tr>
             </tbody>
           </table>
