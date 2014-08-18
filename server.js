@@ -14,14 +14,9 @@ var TemplateApp = function() {
 
     self.setupVariables = function() {
 
-        self.ipaddress = process.env.OPENSHIFT_NODEJS_IP;
+        self.ipaddress = process.env.OPENSHIFT_NODEJS_IP || "0.0.0.0";
         self.port = parseInt(process.env.OPENSHIFT_NODEJS_PORT || 8080);
         self.path = __dirname;
-
-        if (typeof self.ipaddress === "undefined") {
-            console.warn('No OPENSHIFT_NODEJS_IP var, using 127.0.0.1');
-            self.ipaddress = "127.0.0.1";
-        };
 
         // Mongo DB
         self.dbHost = process.env.OPENSHIFT_MONGODB_HOST || "ds063449.mongolab.com:63449";
@@ -118,7 +113,7 @@ var TemplateApp = function() {
         // START SERVER
         var httpServer;
         httpServer = http.createServer(self.app);
-        httpServer.listen(self.httpPort, self.ipaddress);
+        httpServer.listen(self.port, self.ipaddress);
 
         console.log("%s:   Server listening on %s:%d", Date(Date.now()), self.ipaddress, self.port);
     };
