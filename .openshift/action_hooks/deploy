@@ -2,6 +2,3 @@
 
 echo "Loading environment variables..."
 source ~/app-root/data/.bash_profile
-
-echo "Compiling the web site..."
-gulp make
